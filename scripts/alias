@@ -1,0 +1,3 @@
+alias deduplicate="docker run -it -v $1:/home/user/workdir/data deduplication:latest"
+alias aroaetl="docker run -it -p $1:8888 aroa-etl:latest"
+alias aroaclustering="docker run -it -v $1:/home/user/workdir/datadir aroa-clustering:latest datadir/$2"
