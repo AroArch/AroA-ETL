@@ -271,5 +271,5 @@ class ENC_Deduplicater():
         print(f"{match_result.shape[0]} processed")
         print(f"{percent_amb} percent are ambiguous")
 
-        self.deduplicated_data = deduplicated_data.fillna('').replace(r'.0$', '', regex=True)
+        self.deduplicated_data = deduplicated_data.fillna('').replace(r'\.0$', '', regex=True)
         return self.deduplicated_data
