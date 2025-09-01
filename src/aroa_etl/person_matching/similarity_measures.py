@@ -77,38 +77,33 @@ def simple_date_matcher(src_date: str, target_date: str):
     """
         Fuzzy matching for dates in dd.mm.yyyy format 
     """
-    score = 0.0
+    score = -1
     if __not_empty(src_date) and __not_empty(target_date):
         src_date_parts = re.findall(r"[1-9]\d*",src_date)
         trg_date_parts = re.findall(r"[1-9]\d*",target_date)
         score = min(3,len([1 for date_part in src_date_parts if date_part in trg_date_parts]))/3
-    elif __not_empty(src_date) or __not_empty(target_date):
-        score = -1
-    return score * 100
+        score = score * 100
+    return score
     
 
 def name_matcher(src_name: str, target_name: str):
     """
         Fuzzy matching for names. Two empty/nan names are treated as match.
     """
-    score = 0.0
+    score = -1
     if __not_empty(src_name) and __not_empty(target_name):
         score = fuzz.ratio(src_name,target_name,processor=utils.default_process)
         score = score
-    elif __not_empty(src_name) or __not_empty(target_name):
-        score = -1
     return score
 
 def name_set_matcher(src_name: str, target_name: str):
     """
         Fuzzy matching for names. Two empty/nan names are treated as match. Order of names is ignored
     """
-    score = 0.0
+    score = -1
     if __not_empty(src_name) and __not_empty(target_name):
         score = fuzz.token_set_ratio(src_name,target_name,processor=utils.default_process)
         score = score
-    elif __not_empty(src_name) or __not_empty(target_name):
-        score = -1
     return score
 
 
@@ -122,10 +117,10 @@ def person_similarity(src_person: pd.core.series.Series, trg_person: pd.core.ser
     # primary
     primary_scores = []
     if src_lname_col in src_person:
-        score = name_set_matcher(src_person[src_lname_col], trg_person[target_lname_col])
+        score = max(0,name_set_matcher(src_person[src_lname_col], trg_person[target_lname_col]))
         primary_scores.append(score)
     if src_gname_col in src_person:
-        score = name_set_matcher(src_person[src_gname_col], trg_person[target_gname_col])
+        score = max(0,name_set_matcher(src_person[src_gname_col], trg_person[target_gname_col]))
         primary_scores.append(score)
     primary_scores = [s for s in primary_scores if s>=0]
     primary_score = np.sum(primary_scores)/2 if len(primary_scores) > 0 else 0
@@ -137,7 +132,7 @@ def person_similarity(src_person: pd.core.series.Series, trg_person: pd.core.ser
         score = name_matcher(src_person[src_prisoner_number], trg_person[target_prisoner_number])
         secundary_scores.append(score)
     if src_date_col in src_person:
-        score = date_matcher(src_person[src_date_col],trg_person[target_date_col])
+        score = max(0,date_matcher(src_person[src_date_col],trg_person[target_date_col]))
         secundary_scores.append(score)
     secundary_scores = [s for s in secundary_scores if s>=0]
     secundary_score = np.array(secundary_scores).mean() if len(secundary_scores) > 0 else 0

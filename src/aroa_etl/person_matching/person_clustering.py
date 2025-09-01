@@ -224,7 +224,9 @@ def agglomerative_clustering(get_bucket_fn,
                              person_data: pd.core.frame.DataFrame,
                              cutoff: float,
                              linkage: str,
-                             iteration: str):
+                             iteration: str,
+                             allow_known_cluster_merge = False
+                             ):
     """
         This method computes an agglomerative clustering on person_data to build persons.
         Returns a list of index lists.
@@ -237,6 +239,7 @@ def agglomerative_clustering(get_bucket_fn,
     clustering = []
     num_person_rows = not_clustered.shape[0]
     known_cluster_map = lambda idx: known_clusters[idx] if idx in known_clusters else [idx]
+    pre_clustered_entities = set(known_clusters.keys())
     print(f"{num_person_rows} Person Rows")
     print(f"Preprocess Person Data")
     _person_data = preprocess_clustering_data(person_data)
@@ -247,10 +250,12 @@ def agglomerative_clustering(get_bucket_fn,
             pre_cluster = known_cluster_map(person_idx)
             # get similar persons from the lsh index
             # person_bucket = lsh.query(minhashes[person_idx])
-            person_bucket = [bucket_idx for idx in pre_cluster for bucket_idx in get_bucket_fn(idx)]
-            person_bucket = list(set(person_bucket))
+            person_bucket = {bucket_idx for idx in pre_cluster for bucket_idx in get_bucket_fn(idx)}
+            if not allow_known_cluster_merge:
+                person_bucket = person_bucket.difference(pre_clustered_entities)
+            person_bucket = list(person_bucket)
             # reduce to person_information that are not already clustered
-            person_bucket = not_clustered.intersection(person_bucket).difference(known_clusters.keys())
+            person_bucket = not_clustered.intersection(person_bucket)
             person_bucket = person_bucket.union(pre_cluster)
             # slice in which the person_cluster of person_idx is computed 
             person_bucket = _person_data.loc[person_bucket]
