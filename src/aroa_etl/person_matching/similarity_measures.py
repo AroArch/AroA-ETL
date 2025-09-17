@@ -67,8 +67,11 @@ def date_similarity(date_1:str,date_2:str):
         month_score, day_score = month_score_reversed, day_score_reversed
 
     score_list = [year_score, month_score, day_score]
-    score_list = [s for s in score_list if s>=0]
-    return -1 if len(score_list) == 0 else np.array(score_list).mean()
+    score = 100
+    for s in score_list:
+        if s>=0:
+            score = score - (100-s)
+    return -1 if len(score_list) == 0 else max(0, score)
 
 def __not_empty(field):
     return pd.notna(field) and len(field)>0 and "".join(field)!="" and field != "00000000" and field != "-1.0" and field != "-1"
@@ -112,7 +115,7 @@ def person_similarity(src_person: pd.core.series.Series, trg_person: pd.core.ser
                       src_prisoner_number="prisoner_number",src_birthplace = "strPoB_processed",
                       target_gname_col="strGName_processed",target_lname_col="strLName_processed",target_date_col="strDoB_processed",
                       target_prisoner_number="prisoner_number",target_birthplace = "strPoB_processed",
-                      date_matcher=date_similarity, name_only=False
+                      date_matcher=date_similarity, name_only=False, non_names_optional=False
                       ):
     # primary
     primary_scores = []
@@ -135,17 +138,29 @@ def person_similarity(src_person: pd.core.series.Series, trg_person: pd.core.ser
         score = max(0,date_matcher(src_person[src_date_col],trg_person[target_date_col]))
         secundary_scores.append(score)
     secundary_scores = [s for s in secundary_scores if s>=0]
-    secundary_score = np.array(secundary_scores).mean() if len(secundary_scores) > 0 else 0
+    if len(secundary_scores) > 0:
+        secundary_score = np.array(secundary_scores).mean()
+    elif non_names_optional:
+        secundary_score = -1
+    else:
+        secundary_score= 0
     # other
     other_scores = []
     if src_birthplace in src_person:
         score = name_matcher(src_person[src_birthplace],trg_person[target_birthplace])
         other_scores.append(score)
     other_scores = [s for s in other_scores if s>=0]
-    other_score = np.array(other_scores).mean() if len(other_scores) > 0 else 0
+    if len(other_scores) > 0:
+        other_score = np.array(other_scores).mean()
+    elif non_names_optional:
+        other_score = -1
+    else:
+        other_score = 0
 
     # combine with weights
-    score = 2/3 * primary_score + 1/3 * secundary_score
-    score =  3/4 * score + 1/4 * other_score if len(other_scores) > 0 else score
-
+    score = primary_score
+    if secundary_score >= 0:
+        score = 2/3 * score + 1/3 * secundary_score
+    if other_score >=0:
+        score =  3/4 * score + 1/4 * other_score
     return score 

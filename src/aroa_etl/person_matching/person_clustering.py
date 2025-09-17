@@ -73,10 +73,12 @@ def cluster_integrety(person_cluster:"list | pandas.core.frame.DataFrame"):
                                 for i,person in enumerate(person_cluster) ])
     single_link_scores = np.array([single_link_score(person,[*person_cluster[:i],*person_cluster[i+1:]])
                                    for i,person in enumerate(person_cluster) ])
+    max_link_scores = np.array([max_link_score(person,[*person_cluster[:i],*person_cluster[i+1:]])
+                                    for i,person in enumerate(person_cluster) ])
     
     avg_link_scores = np.array([100]) if len(person_cluster) == 0 else avg_link_scores
     single_link_scores = np.array([100]) if len(person_cluster) == 0 else single_link_scores
-    return {"average-link": avg_link_scores.mean(), "single-link" : single_link_scores.mean()}
+    return {"average": avg_link_scores.mean(), "average-link": avg_link_scores.min(), "single-link" : single_link_scores.min(), "max-link": max_link_scores.min()}
 
 def jaccard_distance_cluster(cl1,cl2):
     cl1 = set(cl1)
