@@ -10,7 +10,7 @@ from jellyfish import jaro_similarity
 import plotly.express as px
 from IPython.display import display, HTML
 import plotly.graph_objects as go
-from ..utils import value_is_not_empty_q, replace_special_character, replace_umlaut_character
+from ..utils import value_is_not_empty_q, replace_special_character, replace_umlaut_character, has_value_q
 from rapidfuzz import fuzz, utils
 
 class Col_Matcher():
@@ -165,9 +165,9 @@ class Col_Matcher():
     
     def __customFuzzyMatcher(enc_doc):
         enc_doc = enc_doc.astype(str)
-        enc_doc = enc_doc.loc[enc_doc.apply(value_is_not_empty_q)]
+        enc_doc = enc_doc.loc[enc_doc.apply(has_value_q)]
         if len(enc_doc) == 0:
-            return None
+            return "-"
         median = np.array([
             np.array([
                 fuzz.ratio(value,other_value,processor=utils.default_process) 

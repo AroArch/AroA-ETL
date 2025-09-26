@@ -2,7 +2,8 @@ import pandas as pd
 from collections.abc import Iterable
 import re
 
-NA_VALUES = ["-1", "-1.0", "None", "", "NULL", "unbekannt", "unbekant", "-", "0", "0.0", "NA", "00", "0000", "?", "unklar", "Unklar"]
+NA_VALUES = ["-1", "-1.0", "None", "", "NULL", "unbekannt", "unbekant", "-", "0", "0.0", "NA", "00", "0000", ]
+QA_VALUES = ["?", "unklar", "Unklar"]
 
 def value_is_empty_q(val):
     """
@@ -26,6 +27,17 @@ def value_is_not_empty_q(val):
         - Empty iterables
     """
     return not value_is_empty_q(val)
+
+def __has_no_value_q(val):
+    empty_string = lambda v: True if v in NA_VALUES + QA_VALUES else False
+    return True \
+           if (isinstance(val, Iterable) and not isinstance(val, str) and len([v for v in val if not empty_string(v)]) == 0) \
+           or (isinstance(val, str) and empty_string(val)) \
+           or (pd.isna(val) or val is None)\
+           else False
+
+def has_value_q(val):
+    return not __has_no_value_q(val)
 
 def re_sub_exclude_parenthesis(string, pattern, repl):
     """
