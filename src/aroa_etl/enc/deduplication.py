@@ -1,5 +1,5 @@
 import pandas as pd
-from .matching import Enc_Matcher, Col_Matcher, Default_Col_Matcher, Default_Person_Col_Matcher, Default_Date_Col_Matcher, Default_Strict_Col_Matcher
+from .matching import Enc_Matcher, Col_Matcher, Default_Col_Matcher, Default_Person_Col_Matcher, Default_Date_Col_Matcher, Default_Strict_Col_Matcher, Default_Fuzzy_Col_Matcher
 from ..utils import value_is_not_empty_q
 import re
 import uuid
@@ -42,6 +42,7 @@ class ENC_Deduplicater():
         self.date_cols = set()
         self.other_cols = set()
         self.other_strict_cols = set()
+        self.fuzzy_cols = set()
         self.qa_map = dict()
         self.every_col_has_qa = True
         self.metadata_columns = metadata_columns
@@ -193,6 +194,17 @@ class ENC_Deduplicater():
             self.define_qa_pairs(qa_map)
         self.check_for_qa_cols()
         return self
+    
+    def on_fuzzy_cols(self,fuzzy_cols,qa_map=None):
+        """
+            
+        """
+        self.fuzzy_cols = fuzzy_cols
+        if not qa_map is None:
+            self.define_qa_pairs(qa_map)
+        self.check_for_qa_cols()
+        return self
+    
 
     def set_col_matcher(self,col,col_matcher):
         """
@@ -217,7 +229,10 @@ class ENC_Deduplicater():
                 self.set_col_matcher(col,Default_Strict_Col_Matcher())     
         for col in self.other_cols:
             if col not in cols_with_matcher:
-                self.set_col_matcher(col,Default_Col_Matcher())     
+                self.set_col_matcher(col,Default_Col_Matcher())
+        for col in self.fuzzy_cols:
+            if col not in cols_with_matcher:
+                self.set_col_matcher(col, Default_Fuzzy_Col_Matcher())     
         return self
 
     def run(self):

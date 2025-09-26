@@ -2,6 +2,8 @@ import pandas as pd
 from collections.abc import Iterable
 import re
 
+NA_VALUES = ["-1", "-1.0", "None", "", "NULL", "unbekannt", "unbekant", "-", "0", "0.0", "NA", "00", "0000", "?", "unklar", "Unklar"]
+
 def value_is_empty_q(val):
     """
         Returns true if a value does not contain information:
@@ -9,7 +11,7 @@ def value_is_empty_q(val):
         - The '-' symbol
         - Empty iterables
     """
-    empty_string = lambda v: True if v== '' or v == '-' or v =='00' or v=='0000' else False
+    empty_string = lambda v: True if v in NA_VALUES else False
     return True \
            if (isinstance(val, Iterable) and not isinstance(val, str) and len([v for v in val if not empty_string(v)]) == 0) \
            or (isinstance(val, str) and empty_string(val)) \
