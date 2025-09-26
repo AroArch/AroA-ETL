@@ -402,7 +402,6 @@ class Default_Date_Col_Matcher(Col_Matcher):
 class Default_Fuzzy_Col_Matcher(Col_Matcher):
     def __init__(self):
         super().__init__()
-        self.exlude_empty()
         self.with_custom_substitution(r"\s+",r" ").with_custom_substitution(r"\s(?P<sym>[^a-zA-Z])\s",r"\g<sym>")
         self.with_automatic_umlaut_substitution().with_automatic_abbreviation_completion().on_ascii_with_umlaut().with_automatic_capitalization_substitution()
         self.with_fuzzy_matching()
