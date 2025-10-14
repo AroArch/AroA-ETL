@@ -625,6 +625,9 @@ class Enc_Matcher():
             num_col_with_entries = with_values.sum()
             num_col_not_enough_entries = (~is_matched & (col_has_entries_num == 1)).sum()
             num_is_ambiguous = num_is_ambiguous - num_col_not_enough_entries
+            if isinstance(self.col_matcher[c], Default_Fuzzy_Col_Matcher):
+                num_is_ambiguous += num_col_not_enough_entries
+                num_col_not_enough_entries = 0
             stats_list.append([num_col_with_entries, num_col_without_entries, num_is_ambiguous, num_is_matched, num_col_not_enough_entries])
         stats_df = pd.DataFrame(stats_list).T
         stats_df.columns = match_cols
