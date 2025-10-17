@@ -10,7 +10,8 @@ from jellyfish import jaro_similarity
 import plotly.express as px
 from IPython.display import display, HTML
 import plotly.graph_objects as go
-from ..utils import value_is_not_empty_q, replace_special_character, replace_umlaut_character
+from ..utils import value_is_not_empty_q, replace_special_character, replace_umlaut_character, has_value_q
+from rapidfuzz import fuzz, utils
 
 class Col_Matcher():
     def __init__(self,):
@@ -160,6 +161,24 @@ class Col_Matcher():
             Enables for a syllable inspired matching strategie. 
         """
         self.match_pipeline.append(Col_Matcher.__customSyllableMatcher)
+        return self
+    
+    def __customFuzzyMatcher(enc_doc):
+        enc_doc = enc_doc.astype(str)
+        enc_doc = enc_doc.loc[enc_doc.apply(has_value_q)]
+        if len(enc_doc) == 0:
+            return "-"
+        median = np.array([
+            np.array([
+                fuzz.ratio(value,other_value,processor=utils.default_process) 
+                for other_value in enc_doc
+            ]).mean()
+            for value in enc_doc
+        ]).argmax()
+        return enc_doc.iat[median]
+
+    def with_fuzzy_matching(self):
+        self.match_pipeline.append(Col_Matcher.__customFuzzyMatcher)
         return self
 
     def __substritude_all(name, substitution_map):
@@ -380,7 +399,20 @@ class Default_Date_Col_Matcher(Col_Matcher):
         self.break_if(lambda enc_doc: 1<len([name for name in enc_doc if re.match(r"[\-\s]+$",name)]),"-")
         self.break_if(lambda enc_doc: re.match(r"\-+",first(enc_doc.value_counts().items())[0]),"-")  
 
-    
+class Default_Fuzzy_Col_Matcher(Col_Matcher):
+    """
+    Default Matcher for columns columns with secondary status. 
+    Intended for columns that give additional information and do not contain critial person information. 
+    Matches any value when there are too few values. 
+    Fuzzy matches ambiguous values. 
+    Leads to results of a lower quality than the other matchers. 
+    """
+    def __init__(self):
+        super().__init__()
+        self.with_custom_substitution(r"\s+",r" ").with_custom_substitution(r"\s(?P<sym>[^a-zA-Z])\s",r"\g<sym>")
+        self.with_automatic_umlaut_substitution().with_automatic_abbreviation_completion().on_ascii_with_umlaut().with_automatic_capitalization_substitution()
+        self.with_fuzzy_matching()
+
 class Enc_Matcher():
     """
     Example usage:
@@ -600,6 +632,9 @@ class Enc_Matcher():
             num_col_with_entries = with_values.sum()
             num_col_not_enough_entries = (~is_matched & (col_has_entries_num == 1)).sum()
             num_is_ambiguous = num_is_ambiguous - num_col_not_enough_entries
+            if isinstance(self.col_matcher[c], Default_Fuzzy_Col_Matcher):
+                num_is_ambiguous += num_col_not_enough_entries
+                num_col_not_enough_entries = 0
             stats_list.append([num_col_with_entries, num_col_without_entries, num_is_ambiguous, num_is_matched, num_col_not_enough_entries])
         stats_df = pd.DataFrame(stats_list).T
         stats_df.columns = match_cols
