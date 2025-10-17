@@ -197,7 +197,13 @@ class ENC_Deduplicater():
     
     def on_fuzzy_cols(self,fuzzy_cols,qa_map=None):
         """
-            
+            Defines columns that should be deduplicated.
+            No columns use the Default_Fuzzy_Col_Matcher per default. Has to be 
+            changed with set_col_matcher.
+            Intended only for columns that give additional information 
+            not crucial person data.
+            E.g. use on Place of Transfer not Last Name. 
+            Results will have a lower quality than other matchers. 
         """
         self.fuzzy_cols = fuzzy_cols
         if not qa_map is None:

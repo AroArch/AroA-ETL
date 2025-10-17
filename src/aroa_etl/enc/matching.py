@@ -400,6 +400,13 @@ class Default_Date_Col_Matcher(Col_Matcher):
         self.break_if(lambda enc_doc: re.match(r"\-+",first(enc_doc.value_counts().items())[0]),"-")  
 
 class Default_Fuzzy_Col_Matcher(Col_Matcher):
+    """
+    Default Matcher for columns columns with secondary status. 
+    Intended for columns that give additional information and do not contain critial person information. 
+    Matches any value when there are too few values. 
+    Fuzzy matches ambiguous values. 
+    Leads to results of a lower quality than the other matchers. 
+    """
     def __init__(self):
         super().__init__()
         self.with_custom_substitution(r"\s+",r" ").with_custom_substitution(r"\s(?P<sym>[^a-zA-Z])\s",r"\g<sym>")
