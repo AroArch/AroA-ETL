@@ -153,7 +153,7 @@ def person_similarity(src_person: pd.core.series.Series, trg_person: pd.core.ser
     if len(other_scores) > 0:
         other_score = np.array(other_scores).mean()
     else:
-        other_score = 0
+        other_score = -1
 
     # combine with weights
     score = primary_score
