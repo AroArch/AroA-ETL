@@ -152,8 +152,6 @@ def person_similarity(src_person: pd.core.series.Series, trg_person: pd.core.ser
     other_scores = [s for s in other_scores if s>=0]
     if len(other_scores) > 0:
         other_score = np.array(other_scores).mean()
-    elif non_names_optional:
-        other_score = -1
     else:
         other_score = 0
 
